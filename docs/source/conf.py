@@ -6,12 +6,15 @@ sys.path.insert(0, os.path.abspath("../../src"))
 
 project = "mediawiki-abusefilter"
 author = "Max <madmax.wp@proton.me>"
+copyright = '2026, Max'
 release = "0.1.3"
 version = "0.1.3"
 
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+	'sphinx.ext.autosectionlabel',
+	'sphinx.ext.viewcode'
 ]
 
 templates_path = ["_templates"]
@@ -27,3 +30,4 @@ html_context = {
     "conf_py_path": "/docs/source/",
 }
 
+master_doc = 'index'
