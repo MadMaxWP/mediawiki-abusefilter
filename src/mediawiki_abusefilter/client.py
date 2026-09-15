@@ -36,7 +36,7 @@ class Filters:
     @property
     def api_url(self):
         """Return the MediaWiki API URL."""
-        return f"{self.url}/api.php"
+        return f"{self.url}/w/api.php"
 
     def _special_url(self, title):
         if self._article_path is None:
