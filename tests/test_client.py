@@ -1,16 +1,17 @@
 import inspect
+from mediawiki_abusefilter.auth import Auth as RealAuth
 from mediawiki_abusefilter.client import Filters
 from mediawiki_abusefilter.exceptions import FilterPermissionError, FilterSaveError
 from mediawiki_abusefilter.filter import Filter
 
 
 class Response:
-    def __init__(self, payload=None, text="", url="http://example.org/index.php/Special:AbuseFilter/1", history=None):
+    def __init__(self, payload=None, text="", url="http://example.org/index.php/Special:AbuseFilter/1", history=None, status_code=200):
         self._payload = payload
         self.text = text
         self.url = url
         self.history = history or []
-        self.status_code = 200
+        self.status_code = status_code
 
     def json(self):
         return self._payload
@@ -34,7 +35,9 @@ class Session:
         return next(self.responses)
 
 
-class Auth:
+class DummyAuth:
+    _api_url = "http://example.org/w/api.php"
+    api_url = "http://example.org/w/api.php"
     username = "DR"
     debug = False
     timeout = 30
@@ -44,6 +47,8 @@ class Auth:
 
 
 class ExistingAuth:
+    _api_url = "http://example.org/w/api.php"
+    api_url = "http://example.org/w/api.php"
     username = "DR"
     debug = False
     timeout = 30
@@ -55,7 +60,7 @@ class ExistingAuth:
 def client_with(session):
     client = Filters.__new__(Filters)
     client.url = "http://example.org"
-    client.auth = Auth()
+    client.auth = DummyAuth()
     client.auth.session = session
     client.username = "DR"
     client.password = "password"
@@ -65,6 +70,46 @@ def client_with(session):
     client.session = session
     client._article_path = None
     return client
+
+
+def test_auth_prefers_w_api():
+    session = Session([Response({"query": {"general": {}}}, url="http://example.org/w/api.php")])
+    auth = RealAuth.__new__(RealAuth)
+    auth.url = "http://example.org"
+    auth.username = None
+    auth.password = None
+    auth.timeout = 30
+    auth.tls_verify = True
+    auth.debug = False
+    auth.session = session
+    auth._api_url = None
+    assert auth.api_url == "http://example.org/w/api.php"
+    assert len(session.calls) == 1
+
+
+def test_auth_falls_back_to_root_api_on_404():
+    session = Session([
+        Response(status_code=404),
+        Response({"query": {"general": {}}}, url="http://example.org/api.php"),
+    ])
+    auth = RealAuth.__new__(RealAuth)
+    auth.url = "http://example.org"
+    auth.username = None
+    auth.password = None
+    auth.timeout = 30
+    auth.tls_verify = True
+    auth.debug = False
+    auth.session = session
+    auth._api_url = None
+    assert auth.api_url == "http://example.org/api.php"
+    assert [call[1] for call in session.calls] == ["http://example.org/w/api.php", "http://example.org/api.php"]
+
+
+def test_client_uses_auth_api_url():
+    session = Session([])
+    client = client_with(session)
+    client.auth.api_url = "http://example.org/custom/api.php"
+    assert client.api_url == "http://example.org/custom/api.php"
 
 
 def test_list_normalizes_booleans_and_uses_json_v2():
