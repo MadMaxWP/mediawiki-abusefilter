@@ -4,7 +4,7 @@ from .exceptions import FilterError, LoginError
 
 
 # identify the client and give site admins a way to reach us
-DEFAULT_USER_AGENT = "mediawiki-abusefilter/0.1.0 (madmax.wp@proton.me)"
+DEFAULT_USER_AGENT = "mediawiki-abusefilter/0.1.1 (madmax.wp@proton.me)"
 
 
 class Auth:
@@ -21,13 +21,27 @@ class Auth:
         self.session = session or requests.Session()
         self.session.headers["User-Agent"] = user_agent
         self._logged_in = False
+        self._api_url = None
         if username is not None or password is not None:
             self.login()
 
     @property
     def api_url(self):
         """Return the MediaWiki API URL."""
-        return f"{self.url}/w/api.php"
+        if self._api_url is None:
+            params = {"action": "query", "meta": "siteinfo", "siprop": "general", "format": "json", "formatversion": 2}
+            primary = f"{self.url}/w/api.php"
+            response = self.session.get(primary, params=params, timeout=self.timeout, verify=self.tls_verify)
+            if response.status_code == 404:
+                fallback = f"{self.url}/api.php"
+                response = self.session.get(fallback, params=params, timeout=self.timeout, verify=self.tls_verify)
+                response.raise_for_status()
+                self._api_url = fallback
+            else:
+                response.raise_for_status()
+                self._api_url = primary
+            self._debug(f"api url: {self._api_url}")
+        return self._api_url
 
     def _debug(self, message):
         if self.debug:
