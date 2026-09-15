@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.3
+-----
+
+Document the limitation with BotPassword login.
+
 0.1.2
 -----
 
