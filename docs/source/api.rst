@@ -1,7 +1,17 @@
 API reference
 =============
 
-.. automodule:: mediawiki_abusefilter
+Overview
+--------
+
+The package exposes ``Auth``, ``Filters``, and ``Filter`` clients, along with the documented exceptions.
+
+.. toctree::
+   :maxdepth: 2
+
+   api/filters
+   api/filter
+   api/exceptions
 
 Filters
 -------
