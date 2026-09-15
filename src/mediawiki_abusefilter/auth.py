@@ -3,7 +3,6 @@ import requests
 from .exceptions import FilterError, LoginError
 
 
-# identify the client and give site admins a way to reach us
 DEFAULT_USER_AGENT = "mediawiki-abusefilter/0.1.1 (madmax.wp@proton.me)"
 
 
@@ -30,10 +29,9 @@ class Auth:
         """Return the MediaWiki API URL."""
         if self._api_url is None:
             params = {"action": "query", "meta": "siteinfo", "siprop": "general", "format": "json", "formatversion": 2}
-            api_url = f"{self.url}/w/api.php"
-            response = self.session.get(api_url, params=params, timeout=self.timeout, verify=self.tls_verify)
+            self._api_url = f"{self.url}/w/api.php"
+            response = self.session.get(self._api_url, params=params, timeout=self.timeout, verify=self.tls_verify)
             response.raise_for_status()
-            self._api_url = api_url
             self._debug(f"api url: {self._api_url}")
         return self._api_url
 
@@ -42,7 +40,7 @@ class Auth:
             print(f"[mediawiki-abusefilter] {message}")
 
     def login(self, force=False):
-        """Authenticate the configured account and reuse an existing login when possible."""
+        """Authenticate the configured BotPassword and reuse an existing login when possible."""
         if self._logged_in and not force:
             self._debug("login: already logged in")
             return self
@@ -59,15 +57,15 @@ class Auth:
             self._debug("login token: FAILED")
             raise LoginError(f"could not get login token: {payload}") from exc
         self._debug("login: submitting credentials")
-        response = self.session.post(self.api_url, data={"action": "clientlogin", "username": self.username, "password": self.password, "logintoken": token, "loginreturnurl": f"{self.url}/", "format": "json", "formatversion": 2}, timeout=self.timeout, verify=self.tls_verify)
+        response = self.session.post(self.api_url, data={"action": "login", "lgname": self.username, "lgpassword": self.password, "lgtoken": token, "format": "json"}, timeout=self.timeout, verify=self.tls_verify)
         response.raise_for_status()
         payload = response.json()
-        result = payload.get("clientlogin", {})
+        result = payload.get("login", {})
         if result.get("result") != "Success":
             self._debug(f"login: FAILED ({result.get('result', 'unknown')})")
-            raise LoginError(result.get("message", payload))
+            raise LoginError(result.get("reason") or result.get("message") or payload)
         self._logged_in = True
-        self.username = result.get("username") or self.username
+        self.username = result.get("lgusername") or self.username
         self._debug(f"login: OK as {self.username}")
         return self
 
