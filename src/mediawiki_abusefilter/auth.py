@@ -3,7 +3,7 @@ import requests
 from .exceptions import FilterError, LoginError
 
 
-DEFAULT_USER_AGENT = "mediawiki-abusefilter/0.1.1 (madmax.wp@proton.me)"
+DEFAULT_USER_AGENT = "mediawiki-abusefilter/0.1.2 (madmax.wp@proton.me)"
 
 
 class Auth:
