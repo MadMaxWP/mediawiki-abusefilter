@@ -127,3 +127,4 @@ API
 
 .. autoclass:: mediawiki_abusefilter.Filter
    :members: edit, save, refresh, history, delete
+   :no-index:
