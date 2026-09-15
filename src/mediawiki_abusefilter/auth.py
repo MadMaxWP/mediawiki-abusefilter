@@ -27,7 +27,7 @@ class Auth:
     @property
     def api_url(self):
         """Return the MediaWiki API URL."""
-        return f"{self.url}/api.php"
+        return f"{self.url}/w/api.php"
 
     def _debug(self, message):
         if self.debug:
