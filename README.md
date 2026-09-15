@@ -7,9 +7,11 @@
 [![License](https://img.shields.io/github/license/MadMaxWP/mediawiki-abusefilter.svg)](https://github.com/MadMaxWP/mediawiki-abusefilter/blob/main/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/MadMaxWP/mediawiki-abusefilter.svg)](https://github.com/MadMaxWP/mediawiki-abusefilter/releases/latest)
 
-mediawiki-abusefilter is a small Python client for creating and modifying MediaWiki AbuseFilters on MediaWiki sites. MediaWiki does not provide an API for creating or modifying AbuseFilters, so this package provides an unofficial interface for managing them from Python.
+Python client for working with MediaWiki AbuseFilters.
 
-## Install
+It provides a simple interface for listing, searching, creating, editing, and reviewing filters from Python.
+
+## Installation
 
 ```bash
 pip install mediawiki-abusefilter
@@ -27,10 +29,12 @@ filters = mwaf.filters(
 )
 
 filter = filters.get(123)
+
 print(filter.description)
+print(filter.rules)
 ```
 
-A separate authentication object can be reused when needed:
+The authentication object can also be created separately and reused:
 
 ```python
 auth = mwaf.auth(
@@ -42,27 +46,34 @@ auth = mwaf.auth(
 filters = mwaf.filters("https://example.org", auth=auth)
 ```
 
-## Finding filters
+## Listing filters
 
 ```python
 filters.list()
+```
+
+Filters can be narrowed by status and visibility:
+
+```python
 filters.list(enabled=True)
 filters.list(public=True)
 filters.list(private=True)
+```
 
+To search by text:
+
+```python
 matches = filters.search("spam")
 ```
 
-`list()` can page through large collections automatically. It also accepts `start`, `end`, and `direction` when you need to work around a particular range of filter IDs.
+Large result sets can be limited with `limit`:
 
 ```python
-filters.list(limit=1000)
-filters.list(start=100, end=200, direction="newer")
+filters.list(limit=100)
+filters.search("spam", limit=20)
 ```
 
 ## Creating a filter
-
-New filters are public and enabled by default.
 
 ```python
 filter = filters.create(
@@ -71,7 +82,7 @@ filter = filters.create(
 )
 ```
 
-You can set the main options when creating it:
+Filters can also be created with notes, actions, and other options:
 
 ```python
 filter = filters.create(
@@ -83,12 +94,11 @@ filter = filters.create(
     actions={
         "warn": "abusefilter-warning",
         "tag": ["review", "test"]
-    },
-    verify=True
+    }
 )
 ```
 
-Use `dry_run=True` to prepare the change without creating the filter:
+Use `dry_run=True` to preview a new filter without saving it:
 
 ```python
 change = filters.create(
@@ -96,23 +106,25 @@ change = filters.create(
     "page_namespace == 0",
     dry_run=True
 )
+
 print(change)
 ```
 
 ## Editing a filter
 
-Get the filter and change only what you need:
+Get the filter and change only the values you need:
 
 ```python
 filter = filters.get(123)
+
 filter.edit(description="Updated description")
 filter.edit(enabled=False)
 filter.edit(public=False)
 ```
 
-Leaving an option out keeps its current value. For example, an edit that only changes the description does not change the filter's visibility, status, rules, notes, or actions.
+Values that are not supplied are left unchanged.
 
-You can update several things together:
+Several changes can be made together:
 
 ```python
 filter.edit(
@@ -120,32 +132,37 @@ filter.edit(
     rules="page_namespace == 0 & user_editcount < 20",
     enabled=True,
     public=True,
-    actions={"warn": "abusefilter-warning"},
-    verify=True
+    actions={"warn": "abusefilter-warning"}
 )
 ```
 
 ## Notes
 
-Supplied notes are appended to the existing notes by default. Leaving `notes` out does nothing to the current notes.
+Notes are appended by default:
 
 ```python
 filter.edit(notes="Changed the edit-count limit")
 ```
 
-To replace the notes completely, use `notes_mode="replace"`:
+To replace the existing notes:
 
 ```python
-filter.edit(notes="Clean replacement", notes_mode="replace")
+filter.edit(
+    notes="Updated notes",
+    notes_mode="replace"
+)
 ```
 
-The same form can clear the notes:
+To clear the notes:
 
 ```python
-filter.edit(notes="", notes_mode="replace")
+filter.edit(
+    notes="",
+    notes_mode="replace"
+)
 ```
 
-With `sign_notes=True`, a supplied note gets the current account and date added to it:
+Notes can also include the current account and date:
 
 ```python
 filter.edit(
@@ -154,17 +171,17 @@ filter.edit(
 )
 ```
 
-This produces a note in the form `Changed the rule - Max 14 September 2026`.
-
 ## Rule changes
 
-You can replace the complete expression:
+Replace the complete rule:
 
 ```python
-filter.edit(rules="page_namespace == 0")
+filter.edit(
+    rules="page_namespace == 0"
+)
 ```
 
-Or change part of the current expression:
+Or modify part of the existing rule:
 
 ```python
 filter.edit(replace=("old text", "new text"))
@@ -174,89 +191,113 @@ filter.edit(remove=" & page_namespace == 1")
 filter.edit(regex=(r"user_editcount\s*<\s*10", "user_editcount < 20"))
 ```
 
-Replacement operations are strict by default. Set `strict=False` when a missing match should be ignored.
-
-The resulting expression is still checked by MediaWiki when it is saved, so a rule edit that leaves invalid syntax will be rejected.
-
-## Actions
-
-Multiple actions can be configured at once:
-
-```python
-filter.edit(actions={
-    "warn": "abusefilter-warning",
-    "disallow": "abusefilter-disallowed",
-    "blockautopromote": True,
-    "block": {
-        "talk": True,
-        "anonymous": "1 day",
-        "user": "1 day"
-    },
-    "tag": ["review", "bot"],
-    "throttle": {
-        "count": 5,
-        "period": 120,
-        "groups": "user"
-    }
-})
-```
-
-Set an action to `False` to turn it off.
-
-## History
-
-```python
-for entry in filter.history(limit=20):
-    print(entry["id"], entry["user"], entry["description"])
-```
-
-History entries include the revision ID, time, user, description, flags, actions, and links to the history item and diff.
-
-## Verification and dry runs
-
-Writes are verified by default. After saving, the client reloads the filter and checks the requested changes against the actual saved state. Set `verify=False` when you explicitly want to skip that correctness check.
+Replacement operations are strict by default. Use `strict=False` when a missing match should not raise an error:
 
 ```python
 filter.edit(
-    rules="page_namespace == 0",
-    verify=True
+    replace=("old text", "new text"),
+    strict=False
 )
 ```
 
-`dry_run=True` returns the proposed edit without saving it:
+## Actions
+
+Actions can be configured when creating or editing a filter:
+
+```python
+filter.edit(
+    actions={
+        "warn": "abusefilter-warning",
+        "disallow": "abusefilter-disallowed",
+        "blockautopromote": True,
+        "block": {
+            "talk": True,
+            "anonymous": "1 day",
+            "user": "1 day"
+        },
+        "tag": ["review", "bot"],
+        "throttle": {
+            "count": 5,
+            "period": 120,
+            "groups": "user"
+        }
+    }
+)
+```
+
+Set an action to `False` to remove it:
+
+```python
+filter.edit(
+    actions={
+        "warn": False,
+        "tag": False
+    }
+)
+```
+
+## History
+
+Filter history is available through `history()`:
+
+```python
+for entry in filter.history(limit=20):
+    print(
+        entry["id"],
+        entry["user"],
+        entry["description"]
+    )
+```
+
+## Previewing changes
+
+Use `dry_run=True` to inspect a change before applying it:
 
 ```python
 change = filter.edit(
     description="Preview only",
+    rules="page_namespace == 0",
     dry_run=True
 )
+
 print(change)
 ```
 
-## Account information and debugging
+Changes made through `edit()` and `create()` are verified by default.
+
+Set `verify=False` when you specifically need to skip that verification:
 
 ```python
-print(filters.whoami()["name"])
-```
-
-For request and authentication diagnostics, enable debug output:
-
-```python
-filters = mwaf.filters(
-    "https://example.org",
-    username="MyBot@mybotpassword",
-    password="BOT_PASSWORD",
-    debug=True
+filter.edit(
+    rules="page_namespace == 0",
+    verify=False
 )
 ```
 
-A descriptive User-Agent is sent automatically. You can provide your own with `user_agent=`.
+## Account information
+
+The current account can be inspected with `whoami()`:
+
+```python
+info = filters.whoami()
+
+print(info["name"])
+print(info["groups"])
+```
 
 ## Delete
 
 ```python
 filter.delete()
 ```
+
+## Requirements
+
+Python 3.9 or newer.
+
+## Documentation
+
+Full API documentation and usage examples are available on [Read the Docs](https://mediawiki-abusefilter.readthedocs.io/en/latest/).
 
 ## License
 
