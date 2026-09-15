@@ -27,7 +27,6 @@ class Filters:
         self.tls_verify = self.auth.tls_verify
         self.debug = self.auth.debug
         self.session = self.auth.session
-        self._article_path = None
 
     def _debug(self, message):
         if self.debug:
@@ -39,13 +38,7 @@ class Filters:
         return self.auth.api_url
 
     def _special_url(self, title):
-        if self._article_path is None:
-            response = self.session.get(self.api_url, params={"action": "query", "meta": "siteinfo", "siprop": "general", "format": "json", "formatversion": 2}, timeout=self.timeout, verify=self.tls_verify)
-            response.raise_for_status()
-            self._debug(f"siteinfo: OK ({response.status_code})")
-            self._article_path = response.json()["query"]["general"].get("articlepath", "/index.php/$1")
-        path = self._article_path.replace("$1", title)
-        return urljoin(f"{self.url}/", path.lstrip("/"))
+        return urljoin(f"{self.url}/", f"w/index.php/{title}")
 
     def login(self):
         """Authenticate the configured account and return this client."""
