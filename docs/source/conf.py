@@ -6,8 +6,8 @@ sys.path.insert(0, os.path.abspath("../../src"))
 
 project = "mediawiki-abusefilter"
 author = "Max <madmax.wp@proton.me>"
-release = "0.1.1"
-version = "0.1.1"
+release = "0.1.2"
+version = "0.1.2"
 
 extensions = [
     "sphinx.ext.autodoc",
