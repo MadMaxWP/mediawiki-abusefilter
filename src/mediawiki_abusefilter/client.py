@@ -266,6 +266,9 @@ class Filters:
 
     def _require_success(self, response, creating=False):
         self._raise_if_error(response.text)
+        text = BeautifulSoup(response.text, "html.parser").get_text(" ", strip=True).lower()
+        if "your changes to filter" in text and "have been saved" in text:
+            return
         query = parse_qs(urlparse(response.url).query)
         if query.get("result") == ["success"] or "changedfilter" in query:
             return
