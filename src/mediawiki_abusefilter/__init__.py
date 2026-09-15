@@ -15,7 +15,7 @@ from .exceptions import (
 
 
 # keep the package version in one place
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 auth = Auth
 filters = Filters
