@@ -30,16 +30,10 @@ class Auth:
         """Return the MediaWiki API URL."""
         if self._api_url is None:
             params = {"action": "query", "meta": "siteinfo", "siprop": "general", "format": "json", "formatversion": 2}
-            primary = f"{self.url}/w/api.php"
-            response = self.session.get(primary, params=params, timeout=self.timeout, verify=self.tls_verify)
-            if response.status_code == 404:
-                fallback = f"{self.url}/api.php"
-                response = self.session.get(fallback, params=params, timeout=self.timeout, verify=self.tls_verify)
-                response.raise_for_status()
-                self._api_url = fallback
-            else:
-                response.raise_for_status()
-                self._api_url = primary
+            api_url = f"{self.url}/w/api.php"
+            response = self.session.get(api_url, params=params, timeout=self.timeout, verify=self.tls_verify)
+            response.raise_for_status()
+            self._api_url = api_url
             self._debug(f"api url: {self._api_url}")
         return self._api_url
 
