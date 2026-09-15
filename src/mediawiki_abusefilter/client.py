@@ -304,7 +304,10 @@ class Filters:
         return soup.get_text(" ", strip=True)[:1000]
 
     def _extract_changed_filter(self, html):
-        match = re.search(r"changedfilter[=:](\d+)", html)
+        text = BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+        match = re.search(r"Your changes to filter\s+(\d+)\s+have been saved", text, re.I)
+        if not match:
+            match = re.search(r"changedfilter[=:](\d+)", html)
         if not match:
             raise FilterSaveError("could not determine the filter ID")
         return int(match.group(1))
