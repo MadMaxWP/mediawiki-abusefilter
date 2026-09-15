@@ -182,7 +182,7 @@ class Filter:
                 data["wpFilterHidden"] = data.get("wpFilterHidden", "")
         if dry_run:
             return self._client._preview(self.id, old_rules, data)
-        response = self._client._save_form(form, data, response_url=f"{self._client.url}/index.php/Special:AbuseFilter/{self.id}")
+        response = self._client._save_form(form, data, response_url=f"{self._client.url}/w/index.php/Special:AbuseFilter/{self.id}")
         if public is True and self._client._needs_public_confirmation(response.text):
             _, confirm_form, confirm_data = self._client._parse_form(response.text)
             confirm_data.pop("wpFilterHidden", None)
@@ -218,6 +218,6 @@ class Filter:
         if not field or field.has_attr("disabled"):
             raise FilterError("this wiki does not allow the current user to delete this filter")
         data["wpFilterDeleted"] = field.get("value", "")
-        response = self._client._save_form(form, data, response_url=f"{self._client.url}/index.php/Special:AbuseFilter/{self.id}")
+        response = self._client._save_form(form, data, response_url=f"{self._client.url}/w/index.php/Special:AbuseFilter/{self.id}")
         self._client._require_success(response)
         return True
