@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.1
+-----
+
+Use the standard ``/w/api.php`` endpoint by default, with compatibility fallback for installations that expose ``/api.php``.
+
 0.1.0
 -----
 
