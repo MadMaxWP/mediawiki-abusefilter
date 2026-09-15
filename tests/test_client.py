@@ -6,7 +6,7 @@ from mediawiki_abusefilter.filter import Filter
 
 
 class Response:
-    def __init__(self, payload=None, text="", url="http://example.org/index.php/Special:AbuseFilter/1", history=None, status_code=200):
+    def __init__(self, payload=None, text="", url="http://example.org/w/index.php/Special:AbuseFilter/1", history=None, status_code=200):
         self._payload = payload
         self.text = text
         self.url = url
@@ -68,11 +68,10 @@ def client_with(session):
     client.tls_verify = True
     client.debug = False
     client.session = session
-    client._article_path = None
     return client
 
 
-def test_auth_prefers_w_api():
+def test_auth_uses_w_api():
     session = Session([Response({"query": {"general": {}}}, url="http://example.org/w/api.php")])
     auth = RealAuth.__new__(RealAuth)
     auth.url = "http://example.org"
@@ -85,24 +84,12 @@ def test_auth_prefers_w_api():
     auth._api_url = None
     assert auth.api_url == "http://example.org/w/api.php"
     assert len(session.calls) == 1
+    assert session.calls[0][1] == "http://example.org/w/api.php"
 
 
-def test_auth_falls_back_to_root_api_on_404():
-    session = Session([
-        Response(status_code=404),
-        Response({"query": {"general": {}}}, url="http://example.org/api.php"),
-    ])
-    auth = RealAuth.__new__(RealAuth)
-    auth.url = "http://example.org"
-    auth.username = None
-    auth.password = None
-    auth.timeout = 30
-    auth.tls_verify = True
-    auth.debug = False
-    auth.session = session
-    auth._api_url = None
-    assert auth.api_url == "http://example.org/api.php"
-    assert [call[1] for call in session.calls] == ["http://example.org/w/api.php", "http://example.org/api.php"]
+def test_special_url_uses_w_index():
+    filters = client_with(Session([]))
+    assert filters._special_url("Special:AbuseFilter/1") == "http://example.org/w/index.php/Special:AbuseFilter/1"
 
 
 def test_client_uses_auth_api_url():
@@ -183,7 +170,7 @@ def test_save_failure_does_not_succeed_silently():
     try:
         filters._require_success(Response(
             text="The filter edit form is still open",
-            url="http://example.org/index.php/Special:AbuseFilter/1",
+            url="http://example.org/w/index.php/Special:AbuseFilter/1",
         ))
     except FilterSaveError as exc:
         assert "did not complete successfully" in str(exc)
@@ -195,7 +182,7 @@ def test_edit_form_response_can_be_a_success():
     filters = client_with(Session([]))
     filters._require_success(Response(
         text='<form id="mw-abusefilter-editing-form"><input name="wpEditToken" value="token"></form>',
-        url="http://example.org/index.php/Special:AbuseFilter/1",
+        url="http://example.org/w/index.php/Special:AbuseFilter/1",
     ))
 
 
@@ -203,8 +190,8 @@ def test_redirect_response_can_be_a_success():
     filters = client_with(Session([]))
     filters._require_success(Response(
         text="Abuse filter management",
-        url="http://example.org/index.php/Special:AbuseFilter",
-        history=[Response(url="http://example.org/index.php/Special:AbuseFilter/1")],
+        url="http://example.org/w/index.php/Special:AbuseFilter",
+        history=[Response(url="http://example.org/w/index.php/Special:AbuseFilter/1")],
     ))
 
 
@@ -285,13 +272,12 @@ def test_filter_permission_error_is_public():
 def test_create_dry_run_does_not_post():
     assert inspect.signature(Filters.create).parameters["verify"].default is True
     assert inspect.signature(Filter.edit).parameters["verify"].default is True
-    html = """<form action="/index.php/Special:AbuseFilter/new" method="post">
+    html = """<form action="/w/index.php/Special:AbuseFilter/new" method="post">
     <input name="wpEditToken" value="token">
     <input name="wpFilterEnabled" type="checkbox" value="" checked>
     </form>"""
     session = Session([Response(text=html)])
     filters = client_with(session)
-    filters._article_path = "/index.php/$1"
     result = filters.create(
         "dry run",
         "false",
@@ -319,6 +305,5 @@ def test_filters_debug_propagates_to_external_auth():
     filters.tls_verify = auth.tls_verify
     filters.debug = False
     filters.session = session
-    filters._article_path = None
     filters.__init__("http://example.org", auth=auth, debug=True)
     assert auth.debug is True
