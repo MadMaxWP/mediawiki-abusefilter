@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling >= 1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mediawiki-abusefilter"
+version = "0.1.0"
+description = "A small Python client for creating and modifying MediaWiki AbuseFilters"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["mediawiki", "abusefilter", "wikipedia", "wikimedia", "bot"]
+authors = [
+  { name = "Max", email = "madmax.wp@proton.me" }
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: OS Independent",
+  "Topic :: Internet",
+  "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+  "beautifulsoup4>=4.12,<5",
+  "requests>=2.31,<3",
+]
+
+[project.urls]
+Repository = "https://github.com/MadMaxWP/mediawiki-abusefilter"
+Issues = "https://github.com/MadMaxWP/mediawiki-abusefilter/issues"
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8,<9",
+]
+docs = [
+  "sphinx>=7.4.7,<8",
+  "sphinx-rtd-theme>=3,<4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "integration: talks to a real MediaWiki installation"
+]
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "docs",
+  "tests",
+  "/.pytest_cache",
+]
+
