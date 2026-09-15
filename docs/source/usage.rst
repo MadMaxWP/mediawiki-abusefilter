@@ -21,8 +21,8 @@ Create a client with the URL of the wiki and the account credentials to use for 
 
    filters = mwaf.filters(
        "https://example.org",
-       username="MyBot@mybotpassword",
-       password="BOT_PASSWORD"
+       username="Username",
+       password="PASSWORD"
    )
 
    filter = filters.get(123)
@@ -37,8 +37,8 @@ The client can authenticate directly, or authentication can be created separatel
 
    auth = mwaf.auth(
        "https://example.org",
-       username="MyBot@mybotpassword",
-       password="BOT_PASSWORD"
+       username="Username",
+       password="PASSWORD"
    )
 
    filters = mwaf.filters("https://example.org", auth=auth)
@@ -54,8 +54,8 @@ The client sends a descriptive User-Agent with its requests. The default identif
 
    filters = mwaf.filters(
        "https://example.org",
-       username="MyBot@mybotpassword",
-       password="BOT_PASSWORD",
+       username="Username",
+       password="PASSWORD",
        user_agent="MyBot/1.0 (https://example.org/bot; bot@example.org)"
    )
 
@@ -63,8 +63,8 @@ The client sends a descriptive User-Agent with its requests. The default identif
 
    filters = mwaf.filters(
        "https://example.org",
-       username="MyBot@mybotpassword",
-       password="BOT_PASSWORD",
+       username="Username",
+       password="PASSWORD",
        debug=True
    )
 
@@ -232,3 +232,11 @@ Deleting a filter
 .. code-block:: python
 
    filter.delete()
+
+
+Limitations
+-----------
+
+BotPassword login does not work with this package.
+
+The package uses the MediaWiki web interface for filter creation and editing, which requires a normal user login.
