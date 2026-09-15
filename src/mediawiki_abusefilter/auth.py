@@ -63,8 +63,8 @@ class Auth:
         response.raise_for_status()
         payload = response.json()
         result = payload.get("clientlogin", {})
-        if result.get("status") != "PASS":
-            self._debug(f"login: FAILED ({result.get('status', 'unknown')})")
+        if result.get("result") != "Success":
+            self._debug(f"login: FAILED ({result.get('result', 'unknown')})")
             raise LoginError(result.get("message", payload))
         self._logged_in = True
         self.username = result.get("username") or self.username
