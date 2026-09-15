@@ -24,8 +24,8 @@ import mediawiki_abusefilter as mwaf
 
 filters = mwaf.filters(
     "https://example.org",
-    username="MyBot@mybotpassword",
-    password="BOT_PASSWORD"
+    username="Username",
+    password="PASSWORD"
 )
 
 filter = filters.get(123)
@@ -39,8 +39,8 @@ The authentication object can also be created separately and reused:
 ```python
 auth = mwaf.auth(
     "https://example.org",
-    username="MyBot@mybotpassword",
-    password="BOT_PASSWORD"
+    username="Username",
+    password="PASSWORD"
 )
 
 filters = mwaf.filters("https://example.org", auth=auth)
@@ -294,6 +294,12 @@ filter.delete()
 ## Requirements
 
 Python 3.9 or newer.
+
+## Limitations
+
+BotPassword login does not work with this package.
+
+The package uses the MediaWiki web interface for filter creation and editing, which requires a normal user login.
 
 ## Documentation
 
