@@ -1,9 +1,8 @@
 mediawiki-abusefilter
 =====================
 
-mediawiki-abusefilter is a small Python client for creating and modifying MediaWiki AbuseFilters on MediaWiki sites. MediaWiki does not provide an API for creating or modifying AbuseFilters, so this package provides an unofficial interface for managing filters programmatically.
+mediawiki-abusefilter is a Python client for working with MediaWiki AbuseFilters. It provides a straightforward way to find, create, edit, and review filters from Python.
 
-The documentation covers installation, authentication, retrieving and searching filters, creating and editing filters, rule changes, actions, history, verification, dry runs, and deletion.
 
 .. toctree::
    :maxdepth: 2
