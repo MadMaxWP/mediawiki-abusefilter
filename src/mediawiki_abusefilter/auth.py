@@ -3,7 +3,7 @@ import requests
 from .exceptions import FilterError, LoginError
 
 
-DEFAULT_USER_AGENT = "mediawiki-abusefilter/0.1.2 (madmax.wp@proton.me)"
+DEFAULT_USER_AGENT = "mediawiki-abusefilter/0.1.3 (madmax.wp@proton.me)"
 
 
 class Auth:
@@ -40,7 +40,7 @@ class Auth:
             print(f"[mediawiki-abusefilter] {message}")
 
     def login(self, force=False):
-        """Authenticate the configured BotPassword and reuse an existing login when possible."""
+        """Authenticate the configured account and reuse an existing login when possible."""
         if self._logged_in and not force:
             self._debug("login: already logged in")
             return self
